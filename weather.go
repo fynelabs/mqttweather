@@ -13,6 +13,8 @@ import (
 
 type weatherCard struct {
 	client mqtt.Client
+	cancel chan struct{}
+	stop   bool
 
 	temperature *widget.Label
 	humidity    *widget.Label
@@ -22,31 +24,31 @@ type weatherCard struct {
 	rain        *widget.Label
 }
 
+func (app *application) newWeatherCard() *weatherCard {
+	return &weatherCard{cancel: make(chan struct{}),
+		temperature: widget.NewLabel("-°C, feels like -°C"),
+		humidity:    widget.NewLabel("-%"),
+		pressure:    widget.NewLabel("-"),
+		wind:        widget.NewLabel("- kph (- kph) from -°"),
+		uv:          widget.NewLabel("-"),
+		rain:        widget.NewLabel("-")}
+}
+
 func (app *application) makeWeatherCard() fyne.CanvasObject {
 	button := widget.NewButton("Disconnect", func() {
-		app.weather.stopMqtt(nil)
+		app.card.stopMqtt(nil)
 
-		d := app.makeConnectionDialog()
-		d.Show()
+		app.connectionDialogShow()
 	})
 
-	app.weather.temperature = widget.NewLabel("-°C, feels like -°C")
-	app.weather.humidity = widget.NewLabel("-%")
-	app.weather.pressure = widget.NewLabel("-")
-	app.weather.wind = widget.NewLabel("- kph (- kph) from -°")
-	app.weather.uv = widget.NewLabel("-")
-	app.weather.rain = widget.NewLabel("-")
-
-	r := container.NewVBox(container.New(layout.NewFormLayout(), widget.NewLabel("Temperature:"), app.weather.temperature,
-		widget.NewLabel("Humidity:"), app.weather.humidity,
-		widget.NewLabel("Pressure:"), app.weather.pressure,
-		widget.NewLabel("Wind:"), app.weather.wind,
-		widget.NewLabel("UV:"), app.weather.uv,
-		widget.NewLabel("Rain:"), app.weather.rain),
+	return container.NewVBox(container.New(layout.NewFormLayout(), widget.NewLabel("Temperature:"), app.card.temperature,
+		widget.NewLabel("Humidity:"), app.card.humidity,
+		widget.NewLabel("Pressure:"), app.card.pressure,
+		widget.NewLabel("Wind:"), app.card.wind,
+		widget.NewLabel("UV:"), app.card.uv,
+		widget.NewLabel("Rain:"), app.card.rain),
 		layout.NewSpacer(),
 		container.NewHBox(layout.NewSpacer(), button))
-
-	return r
 }
 
 func (card *weatherCard) connectWeather2Mqtt(serial string) (xbinding.JSONValue, error) {

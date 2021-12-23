@@ -11,26 +11,26 @@ type application struct {
 	app    fyne.App
 	window fyne.Window
 
-	weather weatherCard
+	card *weatherCard
 }
 
 func main() {
-	var self application
-
-	self.app = app.NewWithID("com.fynelabs.weather")
-	self.app.SetIcon(mqttIcon)
-	self.window = self.app.NewWindow("Fyne Labs MQTT Weather Station")
-	self.window.SetMaster()
+	a := app.NewWithID("com.fynelabs.weather")
+	a.SetIcon(mqttIcon)
+	w := a.NewWindow("Fyne Labs MQTT Weather Station")
+	w.SetMaster()
 
 	mLogo := canvas.NewImageFromResource(mqttLogo)
 	mLogo.FillMode = canvas.ImageFillContain
 	mLogo.SetMinSize(fyne.NewSize(275, 70))
 
-	self.window.SetContent(container.NewBorder(container.NewCenter(mLogo), nil, nil, nil, container.NewMax(self.makeWeatherCard())))
+	weather := &application{app: a, window: w}
+	weather.card = weather.newWeatherCard()
 
-	d := self.makeConnectionDialog()
-	d.Show()
+	weather.window.SetContent(container.NewBorder(container.NewCenter(mLogo), nil, nil, nil, container.NewMax(weather.makeWeatherCard())))
 
-	self.window.Resize(fyne.NewSize(450, 100))
-	self.window.ShowAndRun()
+	weather.connectionDialogShow()
+
+	weather.window.Resize(fyne.NewSize(450, 100))
+	weather.window.ShowAndRun()
 }

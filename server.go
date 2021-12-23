@@ -23,38 +23,34 @@ func makeStandby(broker string) (fyne.CanvasObject, *widget.Label) {
 	return container.NewVBox(container.NewCenter(action), infinite), action
 }
 
-func (app *application) wait(token mqtt.Token, d dialog.Dialog, cancel chan struct{}, stop *bool) bool {
+func (app *application) waitCancelOrStepSuccess(token mqtt.Token, d dialog.Dialog, card *weatherCard) bool {
 	select {
-	case <-cancel:
-		*stop = true
+	case <-card.cancel:
+		card.stop = true
 
 	case <-token.Done():
 		if token.Error() != nil {
-			*stop = true
+			card.stop = true
 		}
 	}
 
-	if *stop {
-		app.weather.stopMqtt(d)
+	if card.stop {
+		app.card.stopMqtt(d)
 
-		d := app.makeConnectionDialog()
-		d.Show()
+		app.connectionDialogShow()
 	}
 
 	return true
 }
 
 func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widget.Label, broker string) {
-	cancel := make(chan struct{})
-	stop := false
-
 	d.SetOnClosed(func() {
-		if !stop {
-			cancel <- struct{}{}
+		if !app.card.stop {
+			app.card.cancel <- struct{}{}
 		}
 	})
 
-	if !app.wait(app.weather.client.Connect(), d, cancel, &stop) {
+	if !app.waitCancelOrStepSuccess(app.card.client.Connect(), d, app.card) {
 		return
 	}
 
@@ -64,19 +60,19 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 
 	standbyAction.SetText("Waiting for MQTT sensor identification.")
 
-	token := app.weather.client.Subscribe("homeassistant/sensor/+/status/attributes", 1, func(client mqtt.Client, msg mqtt.Message) {
+	token := app.card.client.Subscribe("homeassistant/sensor/+/status/attributes", 1, func(client mqtt.Client, msg mqtt.Message) {
 		r := topicMatch.FindStringSubmatch(msg.Topic())
 		if len(r) == 0 {
 			return
 		}
 
-		app.weather.client.Unsubscribe("homeassistant/sensor/+/status/attributes")
+		app.card.client.Unsubscribe("homeassistant/sensor/+/status/attributes")
 
 		standbyAction.SetText("Waiting for first MQTT data.")
 
-		json, err := app.weather.connectWeather2Mqtt(r[1])
+		json, err := app.card.connectWeather2Mqtt(r[1])
 		if err != nil {
-			app.weather.stopMqtt(d)
+			app.card.stopMqtt(d)
 			return
 		}
 
@@ -90,8 +86,8 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 
 			json.RemoveListener(listener)
 
-			stop = true
-			close(cancel)
+			app.card.stop = true
+			close(app.card.cancel)
 			d.Hide()
 		})
 
@@ -99,22 +95,21 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 
 		// This goroutine wait for the chanel to notify a cancellation or to be close as a synchronization point.
 		go func() {
-			<-cancel
+			<-app.card.cancel
 
-			if !stop {
-				app.weather.stopMqtt(nil)
+			if !app.card.stop {
+				app.card.stopMqtt(nil)
 
-				d := app.makeConnectionDialog()
-				d.Show()
+				app.connectionDialogShow()
 			}
 		}()
 	})
-	if !app.wait(token, d, cancel, &stop) {
+	if !app.waitCancelOrStepSuccess(token, d, app.card) {
 		return
 	}
 }
 
-func (app *application) makeConnectionDialog() dialog.Dialog {
+func (app *application) connectionDialogShow() {
 	broker := widget.NewEntry()
 	broker.SetPlaceHolder("tcp://broker.emqx.io:1883/")
 	broker.Validator = validation.NewRegexp(`(tcp|ws)://[a-z0-9-._-]+:\d+/`, "not a valid broker address")
@@ -153,7 +148,7 @@ func (app *application) makeConnectionDialog() dialog.Dialog {
 				d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
 				d.Show()
 
-				app.weather.client = mqtt.NewClient(opts)
+				app.card.client = mqtt.NewClient(opts)
 
 				go app.asynchronousConnect(d, standbyAction, broker.Text)
 			} else {
@@ -162,5 +157,5 @@ func (app *application) makeConnectionDialog() dialog.Dialog {
 		}, app.window)
 
 	form.Resize(fyne.NewSize(400, 100))
-	return form
+	form.Show()
 }
