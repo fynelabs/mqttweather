@@ -7,20 +7,30 @@ import (
 	"fyne.io/fyne/v2/container"
 )
 
-func main() {
-	a := app.NewWithID("com.fynelabs.weather")
-	a.SetIcon(mqttIcon)
-	w := a.NewWindow("Fyne Labs MQTT Weather Station")
-	w.SetMaster()
+type application struct {
+	app     fyne.App
+	window  fyne.Window
+	content *fyne.Container
 
-	content := container.NewMax()
-	content.Objects = []fyne.CanvasObject{makeConnectionForm(a, w, content)}
+	weather weatherCard
+}
+
+func main() {
+	var self application
+
+	self.app = app.NewWithID("com.fynelabs.weather")
+	self.app.SetIcon(mqttIcon)
+	self.window = self.app.NewWindow("Fyne Labs MQTT Weather Station")
+	self.window.SetMaster()
+
+	self.content = container.NewMax()
+	self.content.Objects = []fyne.CanvasObject{self.makeConnectionForm()}
 
 	mLogo := canvas.NewImageFromResource(mqttLogo)
 	mLogo.FillMode = canvas.ImageFillContain
 	mLogo.SetMinSize(fyne.NewSize(275, 70))
 
-	w.SetContent(container.NewBorder(container.NewCenter(mLogo), nil, nil, nil, content))
+	self.window.SetContent(container.NewBorder(container.NewCenter(mLogo), nil, nil, nil, self.content))
 
-	w.ShowAndRun()
+	self.window.ShowAndRun()
 }

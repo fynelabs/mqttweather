@@ -23,37 +23,25 @@ func makeStandby(broker string) (fyne.CanvasObject, *widget.Label) {
 	return container.NewVBox(container.NewCenter(action), infinite), action
 }
 
-func stopMqtt(client mqtt.Client, d dialog.Dialog) {
-	if client.IsConnected() {
-		client.Unsubscribe("homeassistant/sensor/+/status/attributes")
-	}
-	client.Disconnect(0)
-	if d != nil {
-		d.Hide()
-	}
-}
-
-func wait(token mqtt.Token, client mqtt.Client, d dialog.Dialog, cancel chan struct{}) bool {
-	var stop bool = false
-
+func (app *application) wait(token mqtt.Token, d dialog.Dialog, cancel chan struct{}, stop *bool) bool {
 	select {
 	case <-cancel:
-		stop = true
+		*stop = true
 
 	case <-token.Done():
 		if token.Error() != nil {
-			stop = true
+			*stop = true
 		}
 	}
 
-	if stop {
-		stopMqtt(client, d)
+	if *stop {
+		app.weather.stopMqtt(d)
 	}
 
 	return true
 }
 
-func asynchronousConnect(a fyne.App, w fyne.Window, content *fyne.Container, d dialog.Dialog, client mqtt.Client, standbyAction *widget.Label, broker string) {
+func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widget.Label, broker string) {
 	cancel := make(chan struct{})
 	stop := false
 
@@ -63,30 +51,30 @@ func asynchronousConnect(a fyne.App, w fyne.Window, content *fyne.Container, d d
 		}
 	})
 
-	if !wait(client.Connect(), client, d, cancel) {
+	if !app.wait(app.weather.client.Connect(), d, cancel, &stop) {
 		return
 	}
 
-	a.Preferences().SetString(mqttBrokerKey, broker)
+	app.app.Preferences().SetString(mqttBrokerKey, broker)
 
 	topicMatch := regexp.MustCompile(`homeassistant/sensor/weatherflow2mqtt_ST-(\d+)/status/attributes`)
 
 	standbyAction.SetText("Waiting for MQTT sensor identification.")
 
-	token := client.Subscribe("homeassistant/sensor/+/status/attributes", 1, func(client mqtt.Client, msg mqtt.Message) {
+	token := app.weather.client.Subscribe("homeassistant/sensor/+/status/attributes", 1, func(client mqtt.Client, msg mqtt.Message) {
 		r := topicMatch.FindStringSubmatch(msg.Topic())
 		if len(r) == 0 {
 			return
 		}
 
-		client.Unsubscribe("homeassistant/sensor/+/status/attributes")
+		app.weather.client.Unsubscribe("homeassistant/sensor/+/status/attributes")
 
 		standbyAction.SetText("Waiting for first MQTT data.")
 
-		weather, json, err := makeWeatherCard(a, w, content, client, r[1])
+		weather := app.makeWeatherCard()
+		json, err := app.weather.connectWeather2Mqtt(r[1])
 		if err != nil {
-			d.Hide()
-			client.Disconnect(0)
+			app.weather.stopMqtt(d)
 			return
 		}
 
@@ -98,8 +86,8 @@ func asynchronousConnect(a fyne.App, w fyne.Window, content *fyne.Container, d d
 				return
 			}
 
-			content.Objects = []fyne.CanvasObject{weather}
-			content.Refresh()
+			app.content.Objects = []fyne.CanvasObject{weather}
+			app.content.Refresh()
 
 			json.RemoveListener(listener)
 
@@ -110,25 +98,26 @@ func asynchronousConnect(a fyne.App, w fyne.Window, content *fyne.Container, d d
 
 		json.AddListener(listener)
 
+		// This goroutine wait for the chanel to notify a cancellation or to be close as a synchronization point.
 		go func() {
 			<-cancel
 
 			if !stop {
-				stopMqtt(client, nil)
+				app.weather.stopMqtt(nil)
 			}
 		}()
 	})
-	if !wait(token, client, d, cancel) {
+	if !app.wait(token, d, cancel, &stop) {
 		return
 	}
 }
 
-func makeConnectionForm(a fyne.App, w fyne.Window, content *fyne.Container) fyne.CanvasObject {
+func (app *application) makeConnectionForm() fyne.CanvasObject {
 	broker := widget.NewEntry()
 	broker.SetPlaceHolder("tcp://broker.emqx.io:1883/")
 	broker.Validator = validation.NewRegexp(`(tcp|ws)://[a-z0-9-._-]+:\d+/`, "not a valid broker address")
 
-	if s := a.Preferences().String(mqttBrokerKey); s != "" {
+	if s := app.app.Preferences().String(mqttBrokerKey); s != "" {
 		broker.SetText(s)
 	}
 
@@ -146,7 +135,7 @@ func makeConnectionForm(a fyne.App, w fyne.Window, content *fyne.Container) fyne
 		},
 		CancelText: "Quit",
 		OnCancel: func() {
-			a.Quit()
+			app.app.Quit()
 		},
 		OnSubmit: func() {
 			opts := mqtt.NewClientOptions()
@@ -162,12 +151,12 @@ func makeConnectionForm(a fyne.App, w fyne.Window, content *fyne.Container) fyne
 
 			standbyContent, standbyAction := makeStandby(broker.Text)
 
-			d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, w)
+			d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
 			d.Show()
 
-			client := mqtt.NewClient(opts)
+			app.weather.client = mqtt.NewClient(opts)
 
-			go asynchronousConnect(a, w, content, d, client, standbyAction, broker.Text)
+			go app.asynchronousConnect(d, standbyAction, broker.Text)
 		},
 	}
 	form.ExtendBaseWidget(form)
