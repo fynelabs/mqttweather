@@ -8,9 +8,8 @@ import (
 )
 
 type application struct {
-	app     fyne.App
-	window  fyne.Window
-	content *fyne.Container
+	app    fyne.App
+	window fyne.Window
 
 	weather weatherCard
 }
@@ -23,14 +22,15 @@ func main() {
 	self.window = self.app.NewWindow("Fyne Labs MQTT Weather Station")
 	self.window.SetMaster()
 
-	self.content = container.NewMax()
-	self.content.Objects = []fyne.CanvasObject{self.makeConnectionForm()}
-
 	mLogo := canvas.NewImageFromResource(mqttLogo)
 	mLogo.FillMode = canvas.ImageFillContain
 	mLogo.SetMinSize(fyne.NewSize(275, 70))
 
-	self.window.SetContent(container.NewBorder(container.NewCenter(mLogo), nil, nil, nil, self.content))
+	self.window.SetContent(container.NewBorder(container.NewCenter(mLogo), nil, nil, nil, container.NewMax(self.makeWeatherCard())))
 
+	d := self.makeConnectionDialog()
+	d.Show()
+
+	self.window.Resize(fyne.NewSize(450, 100))
 	self.window.ShowAndRun()
 }

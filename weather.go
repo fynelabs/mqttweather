@@ -22,27 +22,27 @@ type weatherCard struct {
 	rain        *widget.Label
 }
 
-func (card *application) makeWeatherCard() fyne.CanvasObject {
+func (app *application) makeWeatherCard() fyne.CanvasObject {
 	button := widget.NewButton("Disconnect", func() {
-		card.weather.stopMqtt(nil)
+		app.weather.stopMqtt(nil)
 
-		card.content.Objects = []fyne.CanvasObject{card.makeConnectionForm()}
-		card.content.Refresh()
+		d := app.makeConnectionDialog()
+		d.Show()
 	})
 
-	card.weather.temperature = widget.NewLabel("-°C")
-	card.weather.humidity = widget.NewLabel("-%")
-	card.weather.pressure = widget.NewLabel("-")
-	card.weather.wind = widget.NewLabel("- kph")
-	card.weather.uv = widget.NewLabel("-")
-	card.weather.rain = widget.NewLabel("-")
+	app.weather.temperature = widget.NewLabel("-°C, feels like -°C")
+	app.weather.humidity = widget.NewLabel("-%")
+	app.weather.pressure = widget.NewLabel("-")
+	app.weather.wind = widget.NewLabel("- kph (- kph) from -°")
+	app.weather.uv = widget.NewLabel("-")
+	app.weather.rain = widget.NewLabel("-")
 
-	r := container.NewVBox(container.New(layout.NewFormLayout(), widget.NewLabel("Temperature:"), card.weather.temperature,
-		widget.NewLabel("Humidity:"), card.weather.humidity,
-		widget.NewLabel("Pressure:"), card.weather.pressure,
-		widget.NewLabel("Wind:"), card.weather.wind,
-		widget.NewLabel("UV:"), card.weather.uv,
-		widget.NewLabel("Rain:"), card.weather.rain),
+	r := container.NewVBox(container.New(layout.NewFormLayout(), widget.NewLabel("Temperature:"), app.weather.temperature,
+		widget.NewLabel("Humidity:"), app.weather.humidity,
+		widget.NewLabel("Pressure:"), app.weather.pressure,
+		widget.NewLabel("Wind:"), app.weather.wind,
+		widget.NewLabel("UV:"), app.weather.uv,
+		widget.NewLabel("Rain:"), app.weather.rain),
 		layout.NewSpacer(),
 		container.NewHBox(layout.NewSpacer(), button))
 

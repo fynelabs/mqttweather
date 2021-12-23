@@ -36,6 +36,9 @@ func (app *application) wait(token mqtt.Token, d dialog.Dialog, cancel chan stru
 
 	if *stop {
 		app.weather.stopMqtt(d)
+
+		d := app.makeConnectionDialog()
+		d.Show()
 	}
 
 	return true
@@ -71,7 +74,6 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 
 		standbyAction.SetText("Waiting for first MQTT data.")
 
-		weather := app.makeWeatherCard()
 		json, err := app.weather.connectWeather2Mqtt(r[1])
 		if err != nil {
 			app.weather.stopMqtt(d)
@@ -85,9 +87,6 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 			if err != nil || !obj.IsObject() {
 				return
 			}
-
-			app.content.Objects = []fyne.CanvasObject{weather}
-			app.content.Refresh()
 
 			json.RemoveListener(listener)
 
@@ -104,6 +103,9 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 
 			if !stop {
 				app.weather.stopMqtt(nil)
+
+				d := app.makeConnectionDialog()
+				d.Show()
 			}
 		}()
 	})
@@ -112,7 +114,7 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 	}
 }
 
-func (app *application) makeConnectionForm() fyne.CanvasObject {
+func (app *application) makeConnectionDialog() dialog.Dialog {
 	broker := widget.NewEntry()
 	broker.SetPlaceHolder("tcp://broker.emqx.io:1883/")
 	broker.Validator = validation.NewRegexp(`(tcp|ws)://[a-z0-9-._-]+:\d+/`, "not a valid broker address")
@@ -127,39 +129,38 @@ func (app *application) makeConnectionForm() fyne.CanvasObject {
 	password := widget.NewPasswordEntry()
 	password.SetPlaceHolder("")
 
-	form := &widget.Form{
-		Items: []*widget.FormItem{
+	form := dialog.NewForm("Mqtt broker settings", "Connect", "Quit",
+		[]*widget.FormItem{
 			{Text: "Broker", Widget: broker, HintText: "MQTT broker to connect to"},
 			{Text: "User", Widget: user, HintText: "User to use for connecting (optional)"},
 			{Text: "Password", Widget: password, HintText: "User password to use for connecting (optional)"},
 		},
-		CancelText: "Quit",
-		OnCancel: func() {
-			app.app.Quit()
-		},
-		OnSubmit: func() {
-			opts := mqtt.NewClientOptions()
-			opts.AddBroker(broker.Text)
-			opts.SetClientID("FyneLabs.weather")
-			if user.Text != "" {
-				opts.SetUsername(user.Text)
+		func(confirm bool) {
+			if confirm {
+				opts := mqtt.NewClientOptions()
+				opts.AddBroker(broker.Text)
+				opts.SetClientID("FyneLabs.weather")
+				if user.Text != "" {
+					opts.SetUsername(user.Text)
+				}
+				if password.Text != "" {
+					opts.SetPassword(password.Text)
+				}
+				opts.AutoReconnect = true
+
+				standbyContent, standbyAction := makeStandby(broker.Text)
+
+				d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
+				d.Show()
+
+				app.weather.client = mqtt.NewClient(opts)
+
+				go app.asynchronousConnect(d, standbyAction, broker.Text)
+			} else {
+				app.app.Quit()
 			}
-			if password.Text != "" {
-				opts.SetPassword(password.Text)
-			}
-			opts.AutoReconnect = true
+		}, app.window)
 
-			standbyContent, standbyAction := makeStandby(broker.Text)
-
-			d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
-			d.Show()
-
-			app.weather.client = mqtt.NewClient(opts)
-
-			go app.asynchronousConnect(d, standbyAction, broker.Text)
-		},
-	}
-	form.ExtendBaseWidget(form)
-
+	form.Resize(fyne.NewSize(400, 100))
 	return form
 }
