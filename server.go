@@ -137,27 +137,29 @@ func (app *application) connectionDialogShow() {
 			{Text: "Password", Widget: password, HintText: "User password to use for connecting (optional)"},
 		},
 		func(confirm bool) {
-			if confirm {
-				opts := mqtt.NewClientOptions()
-				opts.AddBroker(broker.Text)
-				opts.SetClientID("FyneLabs.weather")
-				if user.Text != "" {
-					opts.SetUsername(user.Text)
-				}
-				if password.Text != "" {
-					opts.SetPassword(password.Text)
-				}
-				opts.AutoReconnect = true
-
-				standbyContent, standbyAction := makeStandby(broker.Text)
-
-				d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
-				d.Show()
-
-				app.card.client = mqtt.NewClient(opts)
-
-				go app.asynchronousConnect(d, standbyAction, broker.Text)
+			if !confirm {
+				return
 			}
+
+			opts := mqtt.NewClientOptions()
+			opts.AddBroker(broker.Text)
+			opts.SetClientID("FyneLabs.weather")
+			if user.Text != "" {
+				opts.SetUsername(user.Text)
+			}
+			if password.Text != "" {
+				opts.SetPassword(password.Text)
+			}
+			opts.AutoReconnect = true
+
+			standbyContent, standbyAction := makeStandby(broker.Text)
+
+			d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
+			d.Show()
+
+			app.card.client = mqtt.NewClient(opts)
+
+			go app.asynchronousConnect(d, standbyAction, broker.Text)
 		}, app.window)
 
 	form.Resize(fyne.NewSize(400, 100))
