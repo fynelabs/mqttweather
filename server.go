@@ -92,7 +92,7 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 			close(app.card.cancel)
 
 			app.card.Enable()
-			app.card.button.SetText("Disconnect")
+			app.card.action.SetText("Disconnect")
 
 			d.Hide()
 		})
