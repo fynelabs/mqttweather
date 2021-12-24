@@ -73,6 +73,8 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 		json, err := app.card.connectWeather2Mqtt(r[1])
 		if err != nil {
 			app.card.stopMqtt(d)
+
+			app.connectionDialogShow()
 			return
 		}
 
@@ -88,6 +90,10 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 
 			app.card.stop = true
 			close(app.card.cancel)
+
+			app.card.Enable()
+			app.card.button.SetText("Disconnect")
+
 			d.Hide()
 		})
 
@@ -124,7 +130,7 @@ func (app *application) connectionDialogShow() {
 	password := widget.NewPasswordEntry()
 	password.SetPlaceHolder("")
 
-	form := dialog.NewForm("Mqtt broker settings", "Connect", "Quit",
+	form := dialog.NewForm("Mqtt broker settings", "Connect", "Cancel",
 		[]*widget.FormItem{
 			{Text: "Broker", Widget: broker, HintText: "MQTT broker to connect to"},
 			{Text: "User", Widget: user, HintText: "User to use for connecting (optional)"},
@@ -151,11 +157,11 @@ func (app *application) connectionDialogShow() {
 				app.card.client = mqtt.NewClient(opts)
 
 				go app.asynchronousConnect(d, standbyAction, broker.Text)
-			} else {
-				app.app.Quit()
 			}
 		}, app.window)
 
 	form.Resize(fyne.NewSize(400, 100))
 	form.Show()
+
+	app.card.Disable()
 }

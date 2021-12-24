@@ -2,6 +2,7 @@ package main
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
@@ -22,6 +23,9 @@ type weatherCard struct {
 	wind        *widget.Label
 	uv          *widget.Label
 	rain        *widget.Label
+
+	button *widget.Button
+	rect   *canvas.Rectangle
 }
 
 func (app *application) newWeatherCard() *weatherCard {
@@ -31,24 +35,38 @@ func (app *application) newWeatherCard() *weatherCard {
 		pressure:    widget.NewLabel("-"),
 		wind:        widget.NewLabel("- kph (- kph) from -°"),
 		uv:          widget.NewLabel("-"),
-		rain:        widget.NewLabel("-")}
+		rain:        widget.NewLabel("-"),
+		button: widget.NewButton("Connect", func() {
+			if app.card.client != nil {
+				app.card.stopMqtt(nil)
+			}
+
+			app.connectionDialogShow()
+		}),
+		rect: canvas.NewRectangle(disableColor),
+	}
 }
 
-func (app *application) makeWeatherCard() fyne.CanvasObject {
-	button := widget.NewButton("Disconnect", func() {
-		app.card.stopMqtt(nil)
-
-		app.connectionDialogShow()
-	})
-
-	return container.NewVBox(container.New(layout.NewFormLayout(), widget.NewLabel("Temperature:"), app.card.temperature,
-		widget.NewLabel("Humidity:"), app.card.humidity,
-		widget.NewLabel("Pressure:"), app.card.pressure,
-		widget.NewLabel("Wind:"), app.card.wind,
-		widget.NewLabel("UV:"), app.card.uv,
-		widget.NewLabel("Rain:"), app.card.rain),
+func (card *weatherCard) makeWeatherCard() fyne.CanvasObject {
+	return container.NewVBox(container.NewMax(container.New(layout.NewFormLayout(), widget.NewLabel("Temperature:"), card.temperature,
+		widget.NewLabel("Humidity:"), card.humidity,
+		widget.NewLabel("Pressure:"), card.pressure,
+		widget.NewLabel("Wind:"), card.wind,
+		widget.NewLabel("UV:"), card.uv,
+		widget.NewLabel("Rain:"), card.rain),
+		card.rect),
 		layout.NewSpacer(),
-		container.NewHBox(layout.NewSpacer(), button))
+		container.NewHBox(layout.NewSpacer(), card.button))
+}
+
+func (card *weatherCard) Enable() {
+	card.rect.FillColor = enableColor
+	card.rect.Refresh()
+}
+
+func (card *weatherCard) Disable() {
+	card.rect.FillColor = disableColor
+	card.rect.Refresh()
 }
 
 func (card *weatherCard) connectWeather2Mqtt(serial string) (xbinding.JSONValue, error) {
@@ -137,6 +155,7 @@ func (card *weatherCard) stopMqtt(d dialog.Dialog) {
 		card.uv.Unbind()
 		card.rain.Unbind()
 	}
+	card.button.SetText("Connect")
 	card.client.Disconnect(0)
 	card.client = nil
 	if d != nil {

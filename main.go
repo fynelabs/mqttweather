@@ -27,7 +27,7 @@ func main() {
 	weather := &application{app: a, window: w}
 	weather.card = weather.newWeatherCard()
 
-	weather.window.SetContent(container.NewBorder(container.NewCenter(mLogo), nil, nil, nil, container.NewMax(weather.makeWeatherCard())))
+	weather.window.SetContent(container.NewBorder(container.NewCenter(mLogo), nil, nil, nil, weather.card.makeWeatherCard()))
 
 	weather.connectionDialogShow()
 
