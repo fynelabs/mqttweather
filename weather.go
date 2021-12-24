@@ -29,13 +29,12 @@ type weatherCard struct {
 }
 
 func (app *application) newWeatherCard() *weatherCard {
-	return &weatherCard{cancel: make(chan struct{}),
-		temperature: widget.NewLabel("-°C, feels like -°C"),
-		humidity:    widget.NewLabel("-%"),
-		pressure:    widget.NewLabel("-"),
-		wind:        widget.NewLabel("- kph (- kph) from -°"),
-		uv:          widget.NewLabel("-"),
-		rain:        widget.NewLabel("-"),
+	return &weatherCard{temperature: widget.NewLabel("-°C, feels like -°C"),
+		humidity: widget.NewLabel("-%"),
+		pressure: widget.NewLabel("-"),
+		wind:     widget.NewLabel("- kph (- kph) from -°"),
+		uv:       widget.NewLabel("-"),
+		rain:     widget.NewLabel("-"),
 		action: widget.NewButton("Connect", func() {
 			if app.card.client != nil {
 				app.card.stopMqtt(nil)

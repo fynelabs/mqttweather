@@ -157,6 +157,8 @@ func (app *application) connectionDialogShow() {
 			d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
 			d.Show()
 
+			app.card.cancel = make(chan struct{})
+			app.card.stop = false
 			app.card.client = mqtt.NewClient(opts)
 
 			go app.asynchronousConnect(d, standbyAction, broker.Text)
