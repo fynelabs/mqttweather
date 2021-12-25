@@ -3,12 +3,17 @@ package main
 //go:generate fyne bundle -package main -o bundled.go assets
 
 import (
+	"image/color"
+
 	"fyne.io/fyne/v2/theme"
 )
 
 var (
 	mqttLogo = resourceMqttHorSvg
 	mqttIcon = resourceMqttIconSvg
+
+	disableColor = color.RGBA{R: 0, G: 0, B: 0, A: 0x7F}
+	enableColor  = color.Transparent
 
 	weatherSnowflake = theme.NewThemedResource(resourceSnowflakeSvg)
 
