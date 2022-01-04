@@ -81,8 +81,7 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 		var listener binding.DataListener
 
 		listener = binding.NewDataListener(func() {
-			obj, err := json.Get()
-			if err != nil || !obj.IsObject() {
+			if json.IsEmpty() {
 				return
 			}
 
