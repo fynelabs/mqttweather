@@ -15,12 +15,17 @@ import (
 
 var mqttBrokerKey = "mqttBroker"
 
-func makeStandby(broker string) (fyne.CanvasObject, *widget.Label) {
+func (app *application) standbyDialogShow(broker string) (dialog.Dialog, *widget.Label) {
 	action := widget.NewLabel("Connecting to MQTT broker: " + broker)
 	infinite := widget.NewProgressBarInfinite()
 	infinite.Start()
 
-	return container.NewVBox(container.NewCenter(action), infinite), action
+	container := container.NewVBox(container.NewCenter(action), infinite)
+
+	d := dialog.NewCustom("Setting up MQTT connection", "Cancel", container, app.window)
+	d.Show()
+
+	return d, action
 }
 
 func (app *application) waitCancelOrStepSuccess(token mqtt.Token, d dialog.Dialog, card *weatherCard) bool {
@@ -109,9 +114,7 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 			}
 		}()
 	})
-	if !app.waitCancelOrStepSuccess(token, d, app.card) {
-		return
-	}
+	app.waitCancelOrStepSuccess(token, d, app.card)
 }
 
 func (app *application) connectionDialogShow() {
@@ -151,10 +154,7 @@ func (app *application) connectionDialogShow() {
 			}
 			opts.AutoReconnect = true
 
-			standbyContent, standbyAction := makeStandby(broker.Text)
-
-			d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
-			d.Show()
+			d, standbyAction := app.standbyDialogShow(broker.Text)
 
 			app.card.cancel = make(chan struct{})
 			app.card.stop = false
