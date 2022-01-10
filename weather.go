@@ -73,7 +73,7 @@ func (card *weatherCard) connectWeather2Mqtt(serial string) (xbinding.JSONValue,
 	if err != nil {
 		return nil, err
 	}
-	json, err := xbinding.NewJSONFromDataString(mqtt)
+	json, err := xbinding.NewJSONFromString(mqtt)
 	if err != nil {
 		return nil, err
 	}

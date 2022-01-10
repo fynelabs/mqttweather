@@ -15,12 +15,17 @@ import (
 
 var mqttBrokerKey = "mqttBroker"
 
-func makeStandby(broker string) (fyne.CanvasObject, *widget.Label) {
+func (app *application) standbyDialogShow(broker string) (dialog.Dialog, *widget.Label) {
 	action := widget.NewLabel("Connecting to MQTT broker: " + broker)
 	infinite := widget.NewProgressBarInfinite()
 	infinite.Start()
 
-	return container.NewVBox(container.NewCenter(action), infinite), action
+	container := container.NewVBox(container.NewCenter(action), infinite)
+
+	d := dialog.NewCustom("Setting up MQTT connection", "Cancel", container, app.window)
+	d.Show()
+
+	return d, action
 }
 
 func (app *application) waitCancelOrStepSuccess(token mqtt.Token, d dialog.Dialog, card *weatherCard) bool {
@@ -44,12 +49,14 @@ func (app *application) waitCancelOrStepSuccess(token mqtt.Token, d dialog.Dialo
 }
 
 func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widget.Label, broker string) {
+	// Setup action on dialog close action
 	d.SetOnClosed(func() {
 		if !app.card.stop {
 			app.card.cancel <- struct{}{}
 		}
 	})
 
+	// Connect to MQTT and wait on either user cancel or success
 	if !app.waitCancelOrStepSuccess(app.card.client.Connect(), d, app.card) {
 		return
 	}
@@ -60,16 +67,19 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 
 	standbyAction.SetText("Waiting for MQTT sensor identification.")
 
+	// Subscribe to a topic that will give us the serial number of a Tempest weather station
 	token := app.card.client.Subscribe("homeassistant/sensor/+/status/attributes", 1, func(client mqtt.Client, msg mqtt.Message) {
 		r := topicMatch.FindStringSubmatch(msg.Topic())
 		if len(r) == 0 {
 			return
 		}
 
+		// Stop looking for any additional serial number
 		app.card.client.Unsubscribe("homeassistant/sensor/+/status/attributes")
 
 		standbyAction.SetText("Waiting for first MQTT data.")
 
+		// Connect the MQTT session to the widget
 		json, err := app.card.connectWeather2Mqtt(r[1])
 		if err != nil {
 			app.card.stopMqtt(d)
@@ -78,11 +88,11 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 			return
 		}
 
+		// Wait for the first valid live data to arrive
 		var listener binding.DataListener
 
 		listener = binding.NewDataListener(func() {
-			obj, err := json.Get()
-			if err != nil || !obj.IsObject() {
+			if json.IsEmpty() {
 				return
 			}
 
@@ -110,9 +120,8 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 			}
 		}()
 	})
-	if !app.waitCancelOrStepSuccess(token, d, app.card) {
-		return
-	}
+	// Wait for Subscribe to successful set up or user cancel
+	app.waitCancelOrStepSuccess(token, d, app.card)
 }
 
 func (app *application) connectionDialogShow() {
@@ -152,10 +161,7 @@ func (app *application) connectionDialogShow() {
 			}
 			opts.AutoReconnect = true
 
-			standbyContent, standbyAction := makeStandby(broker.Text)
-
-			d := dialog.NewCustom("Setting up MQTT connection", "Cancel", standbyContent, app.window)
-			d.Show()
+			d, standbyAction := app.standbyDialogShow(broker.Text)
 
 			app.card.cancel = make(chan struct{})
 			app.card.stop = false
