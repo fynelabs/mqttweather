@@ -68,12 +68,16 @@ func (app *application) asynchronousConnect(d dialog.Dialog, standbyAction *widg
 
 	standbyAction.SetText("Waiting for MQTT sensor identification.")
 
+	deduplicate := false
+
 	// Subscribe to a topic that will give us the serial number of a Tempest weather station
 	token := app.card.client.Subscribe("homeassistant/sensor/+/status/attributes", 1, func(client mqtt.Client, msg mqtt.Message) {
 		r := topicMatch.FindStringSubmatch(msg.Topic())
-		if len(r) == 0 {
+		if len(r) == 0 || deduplicate {
 			return
 		}
+
+		deduplicate = true
 
 		// Stop looking for any additional serial number
 		app.card.client.Unsubscribe("homeassistant/sensor/+/status/attributes")
