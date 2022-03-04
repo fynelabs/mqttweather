@@ -44,6 +44,7 @@ func (app *application) waitCancelOrStepSuccess(token mqtt.Token, d dialog.Dialo
 		app.card.stopMqtt(d)
 
 		app.connectionDialogShow()
+		return false
 	}
 
 	return true
