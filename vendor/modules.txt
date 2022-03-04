@@ -1,4 +1,4 @@
-# fyne.io/fyne/v2 v2.1.2-rc2.0.20220107003733-0e6d56b7553c
+# fyne.io/fyne/v2 v2.1.2-rc2.0.20220124180650-9c884facd8f5 => /home/cedric/go/src/fyne.io/fyne/
 ## explicit; go 1.14
 fyne.io/fyne/v2
 fyne.io/fyne/v2/app
@@ -49,7 +49,7 @@ github.com/Andrew-M-C/go.jsonvalue
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/eclipse/paho.mqtt.golang v1.3.5
+# github.com/eclipse/paho.mqtt.golang v1.3.5 => /home/cedric/go/src/github.com/eclipse/paho.mqtt.golang
 ## explicit; go 1.14
 github.com/eclipse/paho.mqtt.golang
 github.com/eclipse/paho.mqtt.golang/packets
@@ -59,8 +59,16 @@ github.com/fredbi/uri
 # github.com/fsnotify/fsnotify v1.4.9
 ## explicit; go 1.13
 github.com/fsnotify/fsnotify
+# github.com/fyne-io/gl-js v0.0.0-20220119005834-d2da28d9ccfe
+## explicit; go 1.14
+github.com/fyne-io/gl-js
+# github.com/fyne-io/glfw-js v0.0.0-20220120001248-ee7290d23504
+## explicit; go 1.14
+github.com/fyne-io/glfw-js
 # github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
 ## explicit; go 1.12
+github.com/go-gl/gl/v2.1/gl
+github.com/go-gl/gl/v2.1/gl/KHR
 github.com/go-gl/gl/v3.1/gles2
 github.com/go-gl/gl/v3.1/gles2/KHR
 github.com/go-gl/gl/v3.2-core/gl
@@ -82,9 +90,18 @@ github.com/godbus/dbus/v5
 github.com/goki/freetype
 github.com/goki/freetype/raster
 github.com/goki/freetype/truetype
+# github.com/google/uuid v1.3.0
+## explicit
+github.com/google/uuid
+# github.com/gopherjs/gopherjs v0.0.0-20211219123610-ec9572f70e60
+## explicit; go 1.17
+github.com/gopherjs/gopherjs/js
 # github.com/gorilla/websocket v1.4.2
 ## explicit; go 1.12
 github.com/gorilla/websocket
+# github.com/klauspost/compress v1.10.3
+## explicit; go 1.13
+github.com/klauspost/compress/flate
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
@@ -98,7 +115,7 @@ github.com/srwiley/rasterx
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/yuin/goldmark v1.3.8
+# github.com/yuin/goldmark v1.4.0
 ## explicit; go 1.15
 github.com/yuin/goldmark
 github.com/yuin/goldmark/ast
@@ -115,14 +132,20 @@ golang.org/x/image/font
 golang.org/x/image/math/f64
 golang.org/x/image/math/fixed
 golang.org/x/image/vector
-# golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
-## explicit; go 1.11
+# golang.org/x/mobile v0.0.0-20211207041440-4e6c2922fdee
+## explicit; go 1.16
+golang.org/x/mobile/exp/f32
+# golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
+## explicit; go 1.17
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/html/charset
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
-# golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+# golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+## explicit
+golang.org/x/sync/semaphore
+# golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e
 ## explicit; go 1.17
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
@@ -148,6 +171,18 @@ golang.org/x/text/internal/utf8internal
 golang.org/x/text/language
 golang.org/x/text/runes
 golang.org/x/text/transform
-# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 ## explicit
 gopkg.in/yaml.v3
+# honnef.co/go/js/dom v0.0.0-20210725211120-f030747120f2
+## explicit
+honnef.co/go/js/dom
+# nhooyr.io/websocket v1.8.7
+## explicit; go 1.13
+nhooyr.io/websocket
+nhooyr.io/websocket/internal/bpool
+nhooyr.io/websocket/internal/errd
+nhooyr.io/websocket/internal/wsjs
+nhooyr.io/websocket/internal/xsync
+# fyne.io/fyne/v2 => /home/cedric/go/src/fyne.io/fyne/
+# github.com/eclipse/paho.mqtt.golang => /home/cedric/go/src/github.com/eclipse/paho.mqtt.golang
