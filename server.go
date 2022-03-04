@@ -11,6 +11,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 )
 
 var mqttBrokerKey = "mqttBroker"
@@ -152,7 +153,7 @@ func (app *application) connectionDialogShow() {
 
 			opts := mqtt.NewClientOptions()
 			opts.AddBroker(broker.Text)
-			opts.SetClientID("FyneLabs.weather")
+			opts.SetClientID("FyneLabs.weather." + uuid.NewString())
 			if user.Text != "" {
 				opts.SetUsername(user.Text)
 			}
