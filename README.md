@@ -1,4 +1,13 @@
-# How to test
+# MQTT Weather demo app
+
+A demo of using MQTT bindings with Fyne and Go to show weather data of a
+remote monitoring station.
+
+## Screenshot
+
+![](assets/screenshot.png)
+
+## How to test
 
 Connect mqttweather to broker.emqx.io and then send the following command.
 
