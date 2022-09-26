@@ -1,5 +1,5 @@
 [Details]
-  Icon = "assets/mqtt-icon.svg"
+  Icon = "assets/mqtt-icon.png"
   Name = "Fyne Labs MQTT Weather"
   ID = "com.fynelabs.mqttweather"
   Build = 1
