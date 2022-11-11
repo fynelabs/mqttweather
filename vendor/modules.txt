@@ -1,4 +1,4 @@
-# fyne.io/fyne/v2 v2.1.2-rc2.0.20220124180650-9c884facd8f5 => /home/cedric/go/src/fyne.io/fyne/
+# fyne.io/fyne/v2 v2.1.4 => /home/cedric/go/src/fyne.io/fyne/
 ## explicit; go 1.14
 fyne.io/fyne/v2
 fyne.io/fyne/v2/app
@@ -40,7 +40,7 @@ fyne.io/fyne/v2/storage/repository
 fyne.io/fyne/v2/test
 fyne.io/fyne/v2/theme
 fyne.io/fyne/v2/widget
-# fyne.io/systray v1.1.1-0.20220307102710-0121a6d9ce01
+# fyne.io/systray v1.9.1-0.20220331100914-9177bf851614
 ## explicit; go 1.13
 fyne.io/systray
 fyne.io/systray/internal/generated/menu
