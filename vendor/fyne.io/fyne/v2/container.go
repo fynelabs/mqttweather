@@ -1,5 +1,7 @@
 package fyne
 
+import "sync"
+
 // Declare conformity to CanvasObject
 var _ CanvasObject = (*Container)(nil)
 
@@ -10,7 +12,8 @@ type Container struct {
 	position Position // The current position of the Container
 	Hidden   bool     // Is this Container hidden
 
-	Layout  Layout         // The Layout algorithm for arranging child CanvasObjects
+	Layout  Layout // The Layout algorithm for arranging child CanvasObjects
+	lock    sync.Mutex
 	Objects []CanvasObject // The set of CanvasObjects this container holds
 }
 
@@ -57,6 +60,8 @@ func (c *Container) Add(add CanvasObject) {
 		return
 	}
 
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	c.Objects = append(c.Objects, add)
 	c.layout()
 }
@@ -120,12 +125,14 @@ func (c *Container) Refresh() {
 
 // Remove updates the contents of this container to no longer include the specified object.
 // This method is not intended to be used inside a loop, to remove all the elements.
-// It is much more efficient to just set .Objects to nil instead.
+// It is much more efficient to call RemoveAll() instead.
 func (c *Container) Remove(rem CanvasObject) {
 	if len(c.Objects) == 0 {
 		return
 	}
 
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	for i, o := range c.Objects {
 		if o != rem {
 			continue
@@ -139,6 +146,14 @@ func (c *Container) Remove(rem CanvasObject) {
 		c.layout()
 		return
 	}
+}
+
+// RemoveAll updates the contents of this container to no longer include any objects.
+//
+// Since: 2.2
+func (c *Container) RemoveAll() {
+	c.Objects = nil
+	c.layout()
 }
 
 // Resize sets a new size for the Container.

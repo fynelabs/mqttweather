@@ -87,10 +87,7 @@ func (card *weatherCard) connectWeather2Mqtt(serial string) (xbinding.JSONValue,
 		return nil, err
 	}
 
-	temperatureLabel, err := binding.NewSprintf("%.2f°C, feels like %.2f°C", temperature, temperatureFeel)
-	if err != nil {
-		return nil, err
-	}
+	temperatureLabel := binding.NewSprintf("%.2f°C, feels like %.2f°C", temperature, temperatureFeel)
 
 	humidity, err := json.GetItemFloat("relative_humidity")
 	if err != nil {
@@ -118,10 +115,7 @@ func (card *weatherCard) connectWeather2Mqtt(serial string) (xbinding.JSONValue,
 		return nil, err
 	}
 
-	windLabel, err := binding.NewSprintf("%.2f kph (%.2f kph) from %.2f°", windSpeed, windBurst, windDirection)
-	if err != nil {
-		return nil, err
-	}
+	windLabel := binding.NewSprintf("%.2f kph (%.2f kph) from %.2f°", windSpeed, windBurst, windDirection)
 
 	uv, err := json.GetItemString("uv_description")
 	if err != nil {
